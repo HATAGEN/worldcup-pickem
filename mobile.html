@@ -1,0 +1,1496 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2026 FIFA World Cup Pick'em Mobile v12</title>
+  <style>
+    :root{
+      --bg:#08111f; --card:#101b2e; --card2:#13233d; --text:#eef5ff;
+      --muted:#94a3b8; --line:#27405f; --accent:#22c55e; --accent2:#38bdf8;
+      --danger:#fb7185; --gold:#fbbf24;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(135deg,#07101d,#0b1930 55%,#10203d);
+      color:var(--text);
+    }
+    header{
+      padding:20px 16px;
+      border-bottom:1px solid var(--line);
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(10px);
+      background:rgba(8,17,31,.92);
+    }
+    h1{margin:0;font-size:24px}
+    .sub{color:var(--muted);font-size:13px;margin-top:6px}
+    .wrap{max-width:1680px;margin:0 auto;padding:18px 14px 80px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    button,.btn{
+      border:1px solid var(--line);
+      background:var(--card2);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    button:hover,.btn:hover{border-color:var(--accent2)}
+    .primary{background:linear-gradient(135deg,#16a34a,#0ea5e9);border:0}
+    .danger{background:#3a1420;border-color:#7f1d1d}
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(360px, 470px) 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    @media(max-width:1150px){.layout{grid-template-columns:1fr}}
+
+    .card{
+      background:rgba(16,27,46,.92);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:13px;
+      box-shadow:0 10px 30px rgba(0,0,0,.18);
+    }
+    .sectionTitle{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:10px;
+      margin:20px 0 12px;
+    }
+    .sectionTitle h2{margin:0;font-size:20px}
+    .small{font-size:12px;color:var(--muted)}
+    .note{color:var(--muted);font-size:13px;line-height:1.55}
+
+    .groupsGrid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+    @media(max-width:540px){.groupsGrid{grid-template-columns:1fr}}
+    .groupCard{
+      background:rgba(16,27,46,.92);
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .groupHead{
+      padding:7px 10px;
+      font-weight:1000;
+      text-align:center;
+      background:#1d4ed8;
+    }
+    .groupCard:nth-child(3n+2) .groupHead{background:#16a34a}
+    .groupCard:nth-child(3n) .groupHead{background:#f97316}
+
+    .team{
+      display:grid;
+      grid-template-columns:24px minmax(0,1fr) 18px;
+      gap:7px;
+      align-items:center;
+      padding:7px 9px;
+      background:rgba(19,35,61,.88);
+      border-top:1px solid rgba(39,64,95,.75);
+      cursor:grab;
+    }
+    .team.dragging,.third.dragging{opacity:.45}
+    .rank{font-weight:900;color:#cbd5e1;font-size:12px}
+    .team input{
+      width:100%;
+      min-width:0;
+      border:0;
+      outline:0;
+      background:transparent;
+      color:var(--text);
+      font-size:13px;
+      font-weight:800;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .handle{color:#94a3b8;text-align:right}
+
+    .thirds{display:flex;flex-direction:column;gap:7px}
+    .third{
+      padding:9px 10px;
+      border-radius:12px;
+      background:var(--card);
+      border:1px solid var(--line);
+      display:grid;
+      grid-template-columns:34px minmax(0,1fr) 62px;
+      align-items:center;
+      gap:8px;
+      cursor:grab;
+    }
+    .third b{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:13px;
+    }
+    .third .num{font-weight:1000;color:#cbd5e1}
+    .third .pass{color:var(--accent);font-weight:900;text-align:right}
+    .third .out{color:var(--danger);font-weight:900;text-align:right}
+
+    .bracketShell{
+      overflow:auto;
+      padding:18px;
+      background:rgba(7,16,29,.42);
+      border:1px solid var(--line);
+      border-radius:18px;
+      min-height:940px;
+    }
+    .bracketTitle{
+      text-align:center;
+      font-weight:1000;
+      font-size:18px;
+      margin:0 0 18px;
+    }
+
+    .bracket{
+      min-width:1290px;
+      display:grid;
+      grid-template-columns: 250px 220px 200px 180px 260px 180px 200px 220px 250px;
+      gap:20px;
+      align-items:stretch;
+      position:relative;
+    }
+
+    .round{
+      display:flex;
+      flex-direction:column;
+      justify-content:space-around;
+      min-height:850px;
+      position:relative;
+      padding-top:34px;
+    }
+    .round h3{
+      text-align:center;
+      font-size:12px;
+      margin:0;
+      color:#fff;
+      background:#111827;
+      border:1px solid #334155;
+      border-radius:8px;
+      padding:6px 7px;
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      z-index:4;
+      pointer-events:none;
+    }
+
+    .match{
+      background:rgba(16,27,46,.98);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:8px;
+      margin:7px 0;
+      position:relative;
+      box-shadow:0 8px 20px rgba(0,0,0,.14);
+      min-width:0;
+    }
+
+    .slot{
+      padding:8px 10px;
+      margin:5px 0;
+      border-radius:9px;
+      background:var(--card2);
+      border:1px solid var(--line);
+      cursor:pointer;
+      min-height:38px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:850;
+      font-size:13px;
+      line-height:1.2;
+      white-space:normal;
+      overflow-wrap:anywhere;
+      word-break:keep-all;
+    }
+    .slot.long{
+      font-size:11px;
+      letter-spacing:-.02em;
+      line-height:1.18;
+    }
+    .slot:hover{border-color:var(--accent2)}
+    .slot.winner{
+      background:rgba(34,197,94,.18);
+      border-color:var(--accent);
+      font-weight:1000;
+    }
+    .slot.empty{color:#64748b;cursor:not-allowed}
+
+    .left .match::after{
+      content:"";
+      position:absolute;
+      right:-21px;
+      top:50%;
+      width:21px;
+      border-top:2px solid rgba(56,189,248,.55);
+    }
+    .right .match::before{
+      content:"";
+      position:absolute;
+      left:-21px;
+      top:50%;
+      width:21px;
+      border-top:2px solid rgba(56,189,248,.55);
+    }
+    .left.r32 .match:nth-of-type(odd)::before,
+    .left.r16 .match:nth-of-type(odd)::before,
+    .left.qf .match:nth-of-type(odd)::before{
+      content:"";
+      position:absolute;
+      right:-21px;
+      top:50%;
+      height:calc(100% + 14px);
+      border-right:2px solid rgba(56,189,248,.35);
+    }
+    .right.r32 .match:nth-of-type(odd)::after,
+    .right.r16 .match:nth-of-type(odd)::after,
+    .right.qf .match:nth-of-type(odd)::after{
+      content:"";
+      position:absolute;
+      left:-21px;
+      top:50%;
+      height:calc(100% + 14px);
+      border-left:2px solid rgba(56,189,248,.35);
+    }
+
+    .center{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:18px;
+      min-height:850px;
+      padding-top:34px;
+    }
+    .finalMatch,.thirdPlaceMatch{
+      width:100%;
+      background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(56,189,248,.10));
+      border:1px solid rgba(251,191,36,.5);
+      border-radius:15px;
+      padding:10px;
+      position:relative;
+    }
+    .finalMatch h3,.thirdPlaceMatch h3{
+      text-align:center;
+      font-size:12px;
+      margin:0 0 8px;
+      color:#fff;
+      background:#111827;
+      border:1px solid #334155;
+      border-radius:8px;
+      padding:6px 7px;
+      pointer-events:none;
+    }
+    .finalMatch::before,.finalMatch::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      width:20px;
+      border-top:2px solid rgba(251,191,36,.55);
+    }
+    .finalMatch::before{left:-21px}
+    .finalMatch::after{right:-21px}
+
+    .thirdPlaceMatch{
+      border-color:rgba(148,163,184,.55);
+      background:linear-gradient(135deg,rgba(148,163,184,.12),rgba(56,189,248,.08));
+      margin-top:10px;
+    }
+    .champion{
+      width:100%;
+      font-size:20px;
+      font-weight:1000;
+      padding:20px 14px;
+      border-radius:16px;
+      background:linear-gradient(135deg,rgba(251,191,36,.25),rgba(56,189,248,.16));
+      border:1px solid rgba(251,191,36,.7);
+      text-align:center;
+      box-shadow:0 0 34px rgba(251,191,36,.13);
+      overflow-wrap:anywhere;
+    }
+    .runnerUp{
+      width:100%;
+      font-size:16px;
+      font-weight:950;
+      padding:14px 12px;
+      border-radius:14px;
+      background:rgba(56,189,248,.12);
+      border:1px solid rgba(56,189,248,.45);
+      text-align:center;
+      color:#dbeafe;
+      overflow-wrap:anywhere;
+    }
+    .thirdWinner{
+      width:100%;
+      font-size:15px;
+      font-weight:950;
+      padding:13px 12px;
+      border-radius:14px;
+      background:rgba(148,163,184,.12);
+      border:1px solid rgba(148,163,184,.45);
+      text-align:center;
+      color:#dbeafe;
+      overflow-wrap:anywhere;
+    }
+
+    textarea{
+      width:100%;
+      min-height:80px;
+      background:#07101d;
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+    }
+  
+
+    .matchMeta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:6px;
+      color:#f9a8d4;
+      font-weight:1000;
+      font-size:12px;
+      padding:2px 2px 6px;
+      border-bottom:1px solid rgba(39,64,95,.55);
+      margin-bottom:5px;
+    }
+    .matchMeta span:last-child{
+      color:#cbd5e1;
+      font-size:11px;
+      font-weight:800;
+      text-align:right;
+    }
+    .thirdLine{
+      stroke:rgba(148,163,184,.65);
+      stroke-dasharray:5 5;
+    }
+
+    .bracketShell{ position:relative; }
+    .bracketSvg{
+      position:absolute;
+      left:18px;
+      top:64px;
+      pointer-events:none;
+      z-index:1;
+      overflow:visible;
+    }
+    .bracket{ z-index:2; }
+    .match,.finalMatch,.thirdPlaceMatch{ z-index:3; }
+    .left .match::after,
+    .right .match::before,
+    .left.r32 .match:nth-of-type(odd)::before,
+    .left.r16 .match:nth-of-type(odd)::before,
+    .left.qf .match:nth-of-type(odd)::before,
+    .right.r32 .match:nth-of-type(odd)::after,
+    .right.r16 .match:nth-of-type(odd)::after,
+    .right.qf .match:nth-of-type(odd)::after,
+    .finalMatch::before,
+    .finalMatch::after{
+      display:none !important;
+    }
+
+  
+    .phasePanel{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+      margin:0 0 16px;
+    }
+    @media(max-width:850px){.phasePanel{grid-template-columns:1fr}}
+    .phaseCard{
+      border:1px solid var(--line);
+      background:rgba(16,27,46,.88);
+      border-radius:14px;
+      padding:11px;
+    }
+    .phaseCard.active{border-color:var(--accent2);box-shadow:0 0 0 1px rgba(56,189,248,.25) inset}
+    .phaseCard.done{border-color:rgba(34,197,94,.55)}
+    .phaseCard.locked{opacity:.58}
+    .phaseTitle{font-weight:1000;margin-bottom:6px}
+    .phaseText{font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:9px}
+    .lockedArea{
+      position:relative;
+      opacity:.62;
+      filter:saturate(.7);
+    }
+    .lockedArea::after{
+      content:"🔒 このステップは現在ロック中";
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:18px;
+      color:#e2e8f0;
+      font-weight:1000;
+      background:rgba(7,16,29,.72);
+      border:1px dashed rgba(148,163,184,.45);
+      border-radius:16px;
+      z-index:10;
+      pointer-events:none;
+    }
+    .lockedArea *{pointer-events:none!important}
+    .phaseBadge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      padding:2px 8px;
+      font-size:11px;
+      font-weight:1000;
+      border:1px solid rgba(148,163,184,.45);
+      color:#cbd5e1;
+      margin-left:6px;
+    }
+    .phaseBadge.ok{color:#86efac;border-color:rgba(34,197,94,.55)}
+
+  
+    .moveBtns{
+      display:flex;
+      gap:5px;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .moveBtn{
+      width:32px;
+      height:32px;
+      padding:0;
+      border-radius:9px;
+      font-size:16px;
+      line-height:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#0f2440;
+      border:1px solid rgba(148,163,184,.45);
+    }
+    .moveBtn:disabled{
+      opacity:.32;
+      cursor:not-allowed;
+    }
+    .team{
+      grid-template-columns:28px minmax(0,1fr) 72px !important;
+      cursor:default !important;
+    }
+    .third{
+      grid-template-columns:34px minmax(0,1fr) 72px 62px !important;
+      cursor:default !important;
+    }
+    .thirdMoveBtns{
+      display:flex;
+      gap:5px;
+      justify-content:flex-end;
+    }
+    @media (max-width: 900px){
+      .layout{grid-template-columns:1fr !important;}
+      .phasePanel{grid-template-columns:1fr !important;}
+      .groupsGrid{grid-template-columns:1fr !important;}
+      .groupCard{width:100%; min-width:0 !important;}
+      .team input{
+        font-size:16px !important;
+        white-space:normal !important;
+        line-height:1.25;
+      }
+      .third b{
+        white-space:normal !important;
+        font-size:15px !important;
+      }
+      .bracketShell{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+      body{overflow-x:hidden;}
+    }
+    @media (max-width: 600px){
+      .wrap{padding:10px 8px 60px;}
+      header{padding:14px 8px;}
+      h1{font-size:20px;}
+      .sub{font-size:12px;}
+      .toolbar button{flex:1 1 auto; justify-content:center;}
+      .groupsGrid{
+        display:flex !important;
+        flex-direction:column !important;
+        gap:9px !important;
+      }
+      .groupHead{font-size:15px;}
+      .team{
+        grid-template-columns:24px minmax(0,1fr) 74px !important;
+        padding:10px 8px !important;
+      }
+      .team input{font-size:16px !important;}
+      .moveBtn{width:32px;height:34px;}
+      .third{
+        grid-template-columns:28px minmax(0,1fr) 74px 50px !important;
+        padding:10px 8px !important;
+      }
+      .sectionTitle{margin:16px 0 8px;}
+      .bracket{min-width:1290px;}
+    }
+
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding:0 14px">
+    <h1>2026 FIFA World Cup Pick'em MVP</h1>
+    <div class="sub">グループ順位 → 3位通過順位 → 左右トーナメント → 決勝・準優勝・3位決定戦まで完成</div>
+    <div class="toolbar">
+      <button class="primary" onclick="saveLocal()">保存する</button>
+      <button onclick="loadLocal()">読み込む</button>
+      <button onclick="makeShareUrl()">共有URLをコピー</button>
+      <button onclick="shareX()">Xで共有</button>
+      <button class="danger" onclick="resetAll()">リセット</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="layout">
+    <aside>
+      <div class="card">
+        <div class="note">
+          <b>操作：</b>グループ順位と3位順位はドラッグで並び替え。チーム名は直接編集OK。
+          スマホ完全対応版です。順位変更はドラッグではなく↑↓ボタンで行います。順番は「グループ順位を確定 → 3位通過順位を確定 → トーナメント予想」。
+        </div>
+      </div>
+
+      <div class="sectionTitle">
+        <h2>進行ステップ</h2>
+        <span class="small">ロック/解除</span>
+      </div>
+      <div class="phasePanel">
+        <div id="phaseGroup" class="phaseCard">
+          <div class="phaseTitle">1. グループ順位 <span id="badgeGroup" class="phaseBadge">編集中</span></div>
+          <div class="phaseText">A〜L組の順位をドラッグで決める。</div>
+          <button class="primary" id="btnLockGroups" onclick="lockGroups()">グループ順位を確定</button>
+          <button id="btnUnlockGroups" onclick="unlockGroups()" style="display:none">解除して再編集</button>
+        </div>
+        <div id="phaseThird" class="phaseCard locked">
+          <div class="phaseTitle">2. 3位通過順位 <span id="badgeThird" class="phaseBadge">未解放</span></div>
+          <div class="phaseText">3位チームを縦に並べ、上位8チームを通過にする。</div>
+          <button class="primary" id="btnLockThird" onclick="lockThirds()" disabled>3位順位を確定</button>
+          <button id="btnUnlockThird" onclick="unlockThirds()" style="display:none">解除して再編集</button>
+        </div>
+        <div id="phaseKnockout" class="phaseCard locked">
+          <div class="phaseTitle">3. トーナメント <span id="badgeKnockout" class="phaseBadge">未解放</span></div>
+          <div class="phaseText">各試合の勝者をクリックして優勝まで予想。</div>
+          <button class="primary" id="btnStartKnockout" onclick="startKnockout()" disabled>トーナメント開始</button>
+        </div>
+      </div>
+
+      <div class="sectionTitle">
+        <h2>グループ順位</h2>
+        <span class="small">↑↓ボタンで順位変更</span>
+      </div>
+      <div id="groups" class="groupsGrid"></div>
+
+      <div class="sectionTitle">
+        <h2>3位チーム順位</h2>
+        <span class="small">上位8チーム通過</span>
+      </div>
+      <div id="thirdsWrap"><div id="thirds" class="thirds"></div></div>
+
+      <div class="sectionTitle"><h2>共有URL</h2></div>
+      <div class="card">
+        <textarea id="shareBox" readonly placeholder="共有URLを作成するとここに表示されます"></textarea>
+        <div class="small">サーバー不要。HTMLを貼るだけで動くMVP版。</div>
+      </div>
+    </aside>
+
+    <section>
+      <div id="bracketWrap" class="bracketShell">
+        <div class="bracketTitle">🏆 決勝トーナメント表</div>
+        <svg id="bracketLines" class="bracketSvg"></svg><div id="bracket" class="bracket"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const GROUP_IDS = "ABCDEFGHIJKL".split("");
+
+const MATCH_SCHEDULE = {
+  // Round of 32
+  r32_0:{date:"6/30", time:"05:30", venue:"Dallas"},
+  r32_1:{date:"7/1", time:"06:00", venue:"New York/New Jersey"},
+  r32_2:{date:"6/29", time:"04:00", venue:"Los Angeles"},
+  r32_3:{date:"6/30", time:"10:00", venue:"Monterrey"},
+  r32_4:{date:"7/3", time:"08:00", venue:"Toronto"},
+  r32_5:{date:"7/3", time:"04:00", venue:"Los Angeles"},
+  r32_6:{date:"7/2", time:"09:00", venue:"San Francisco"},
+  r32_7:{date:"7/2", time:"05:00", venue:"Seattle"},
+
+  r32_8:{date:"6/30", time:"02:00", venue:"Houston"},
+  r32_9:{date:"7/1", time:"02:00", venue:"Arlington"},
+  r32_10:{date:"7/1", time:"10:00", venue:"Mexico City"},
+  r32_11:{date:"7/2", time:"01:00", venue:"Atlanta"},
+  r32_12:{date:"7/4", time:"07:00", venue:"Miami"},
+  r32_13:{date:"7/4", time:"03:00", venue:"Arlington"},
+  r32_14:{date:"7/3", time:"12:00", venue:"Vancouver"},
+  r32_15:{date:"7/4", time:"10:00", venue:"Kansas City"},
+
+  // Round of 16
+  r16_0:{date:"7/5", time:"02:00", venue:"Houston"},
+  r16_1:{date:"7/5", time:"06:00", venue:"Philadelphia"},
+  r16_2:{date:"7/7", time:"04:00", venue:"Arlington"},
+  r16_3:{date:"7/7", time:"09:00", venue:"Seattle"},
+  r16_4:{date:"7/6", time:"05:00", venue:"New York/New Jersey"},
+  r16_5:{date:"7/6", time:"09:00", venue:"Mexico City"},
+  r16_6:{date:"7/8", time:"01:00", venue:"Atlanta"},
+  r16_7:{date:"7/8", time:"05:00", venue:"Vancouver"},
+
+  // Quarter-finals
+  qf_0:{date:"7/10", time:"05:00", venue:"Foxborough"},
+  qf_1:{date:"7/11", time:"04:00", venue:"Los Angeles"},
+  qf_2:{date:"7/12", time:"06:00", venue:"Miami"},
+  qf_3:{date:"7/12", time:"10:00", venue:"Kansas City"},
+
+  // Semi-finals, 3rd-place, final
+  sf_0:{date:"7/15", time:"04:00", venue:"Arlington"},
+  sf_1:{date:"7/16", time:"04:00", venue:"Atlanta"},
+  third_0:{date:"7/19", time:"06:00", venue:"Miami"},
+  final_0:{date:"7/20", time:"04:00", venue:"New York/New Jersey"}
+};
+
+function scheduleHtml(matchId){
+  const s = MATCH_SCHEDULE[matchId];
+  if(!s) return "";
+  return `<div class="matchMeta"><span>${s.date} ${s.time}</span><span>${s.venue}</span></div>`;
+}
+
+
+
+const defaultGroups = {
+  A:["🇲🇽 メキシコ","🇿🇦 南アフリカ","🇰🇷 韓国","🇨🇿 チェコ"],
+  B:["🇨🇦 カナダ","🇧🇦 ボスニア・ヘルツェゴビナ","🇶🇦 カタール","🇨🇭 スイス"],
+  C:["🇧🇷 ブラジル","🇲🇦 モロッコ","🇭🇹 ハイチ","🇬🇧 スコットランド"],
+  D:["🇺🇸 アメリカ","🇵🇾 パラグアイ","🇦🇺 オーストラリア","🇹🇷 トルコ"],
+  E:["🇩🇪 ドイツ","🇨🇼 キュラソー","🇨🇮 コートジボワール","🇪🇨 エクアドル"],
+  F:["🇳🇱 オランダ","🇯🇵 日本","🇸🇪 スウェーデン","🇹🇳 チュニジア"],
+  G:["🇧🇪 ベルギー","🇪🇬 エジプト","🇮🇷 イラン","🇳🇿 ニュージーランド"],
+  H:["🇪🇸 スペイン","🇨🇻 カボベルデ","🇸🇦 サウジアラビア","🇺🇾 ウルグアイ"],
+  I:["🇫🇷 フランス","🇸🇳 セネガル","🇮🇶 イラク","🇳🇴 ノルウェー"],
+  J:["🇦🇷 アルゼンチン","🇩🇿 アルジェリア","🇦🇹 オーストリア","🇯🇴 ヨルダン"],
+  K:["🇵🇹 ポルトガル","🇨🇩 コンゴ民主共和国","🇺🇿 ウズベキスタン","🇨🇴 コロンビア"],
+  L:["🇬🇧 イングランド","🇭🇷 クロアチア","🇬🇭 ガーナ","🇵🇦 パナマ"]
+};
+
+let state = {
+  groups: structuredClone(defaultGroups),
+  thirdOrder: [],
+  winners: {},
+  phase: { groupsLocked:false, thirdsLocked:false, knockoutStarted:false }
+};
+
+let dragInfo = null;
+
+function ensurePhase(){
+  if(!state.phase){
+    state.phase = { groupsLocked:false, thirdsLocked:false, knockoutStarted:false };
+  }
+}
+
+function encodeState(){
+  const json = JSON.stringify(state);
+  return btoa(unescape(encodeURIComponent(json))).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
+}
+function decodeState(s){
+  try{
+    s = s.replaceAll("-","+").replaceAll("_","/");
+    while(s.length % 4) s += "=";
+    return JSON.parse(decodeURIComponent(escape(atob(s))));
+  }catch(e){ return null; }
+}
+function saveLocal(){
+  localStorage.setItem("wc_pickem_mobile_v12", JSON.stringify(state));
+  alert("保存した！");
+}
+function loadLocal(){
+  const raw = localStorage.getItem("wc_pickem_mobile_v12");
+  if(!raw) return alert("保存データがないぞ。");
+  state = JSON.parse(raw);
+  ensurePhase();
+  renderAll();
+}
+function makeShareUrl(){
+  const url = location.origin + location.pathname + "#data=" + encodeState();
+  document.getElementById("shareBox").value = url;
+  navigator.clipboard?.writeText(url);
+  alert("共有URLをコピーした！");
+}
+function shareX(){
+  makeShareUrl();
+  const champion = getChampion() || "未定";
+  const runnerUp = getRunnerUp() || "未定";
+  const third = state.winners["third_0"] || "未定";
+  const url = document.getElementById("shareBox").value;
+  const text = `俺のW杯Pick'em予想！優勝：${champion} / 準優勝：${runnerUp} / 3位：${third}`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+}
+function resetAll(){
+  if(!confirm("全部リセットする？")) return;
+  state = {groups: structuredClone(defaultGroups), thirdOrder: [], winners:{}, phase:{groupsLocked:false, thirdsLocked:false, knockoutStarted:false}};
+  history.replaceState(null,"",location.pathname);
+  renderAll();
+}
+
+
+function canEditGroups(){
+  ensurePhase();
+  return !state.phase.groupsLocked;
+}
+function canEditThirds(){
+  ensurePhase();
+  return state.phase.groupsLocked && !state.phase.thirdsLocked;
+}
+function moveGroupTeam(groupId, index, dir){
+  if(!canEditGroups()) return;
+  const to = index + dir;
+  if(to < 0 || to >= state.groups[groupId].length) return;
+  moveItem(state.groups[groupId], index, to);
+  syncThirdOrder();
+  buildInitialBracket();
+  cleanupInvalidWinners();
+  buildInitialBracket();
+  renderGroups();
+  renderThirds();
+  renderBracket();
+  updateLocks();
+}
+function moveThirdTeam(index, dir){
+  if(!canEditThirds()) return;
+  const to = index + dir;
+  if(to < 0 || to >= state.thirdOrder.length) return;
+  moveItem(state.thirdOrder, index, to);
+  buildInitialBracket();
+  cleanupInvalidWinners();
+  buildInitialBracket();
+  renderThirds();
+  renderBracket();
+  updateLocks();
+}
+
+function renderGroups(){
+  const root = document.getElementById("groups");
+  root.innerHTML = "";
+  const editable = canEditGroups();
+
+  GROUP_IDS.forEach(g=>{
+    const card = document.createElement("div");
+    card.className = "groupCard";
+    card.innerHTML = `<div class="groupHead">${g}</div>`;
+
+    state.groups[g].forEach((team, idx)=>{
+      const row = document.createElement("div");
+      row.className = "team";
+      row.dataset.group = g;
+      row.dataset.index = idx;
+
+      row.innerHTML = `
+        <div class="rank">${idx+1}</div>
+        <input value="${escapeHtml(team)}" ${editable ? "" : "readonly"} />
+        <div class="moveBtns">
+          <button class="moveBtn" onclick="moveGroupTeam('${g}',${idx},-1)" ${(!editable || idx===0) ? "disabled" : ""}>↑</button>
+          <button class="moveBtn" onclick="moveGroupTeam('${g}',${idx},1)" ${(!editable || idx===state.groups[g].length-1) ? "disabled" : ""}>↓</button>
+        </div>
+      `;
+
+      row.querySelector("input").addEventListener("input", e=>{
+        if(!canEditGroups()) return;
+        state.groups[g][idx] = e.target.value || `${g}${idx+1}`;
+        syncThirdOrder();
+        buildInitialBracket();
+        cleanupInvalidWinners();
+        buildInitialBracket();
+        renderThirds();
+        renderBracket();
+        updateLocks();
+      });
+
+      card.appendChild(row);
+    });
+
+    root.appendChild(card);
+  });
+}
+
+function syncThirdOrder(){
+  const thirds = GROUP_IDS.map(g => state.groups[g][2]);
+  const existing = state.thirdOrder.filter(t => thirds.includes(t));
+  const missing = thirds.filter(t => !existing.includes(t));
+  state.thirdOrder = [...existing, ...missing];
+}
+
+function renderThirds(){
+  syncThirdOrder();
+  const root = document.getElementById("thirds");
+  root.innerHTML = "";
+  const editable = canEditThirds();
+
+  state.thirdOrder.forEach((team, idx)=>{
+    const div = document.createElement("div");
+    div.className = "third";
+    div.dataset.index = idx;
+    div.innerHTML = `
+      <span class="num">${idx+1}</span>
+      <b>${escapeHtml(team)}</b>
+      <div class="thirdMoveBtns">
+        <button class="moveBtn" onclick="moveThirdTeam(${idx},-1)" ${(!editable || idx===0) ? "disabled" : ""}>↑</button>
+        <button class="moveBtn" onclick="moveThirdTeam(${idx},1)" ${(!editable || idx===state.thirdOrder.length-1) ? "disabled" : ""}>↓</button>
+      </div>
+      <span class="${idx<8?'pass':'out'}">${idx<8?'通過':'敗退'}</span>
+    `;
+    root.appendChild(div);
+  });
+}
+
+function addDragEvents(el, type){
+  el.addEventListener("dragstart", e=>{
+    dragInfo = {type, group:el.dataset.group, index:Number(el.dataset.index)};
+    el.classList.add("dragging");
+  });
+  el.addEventListener("dragend", e=>el.classList.remove("dragging"));
+  el.addEventListener("dragover", e=>e.preventDefault());
+  el.addEventListener("drop", e=>{
+    e.preventDefault();
+    ensurePhase();
+    if(type === "group" && state.phase.groupsLocked) return;
+    if(type === "third" && (!state.phase.groupsLocked || state.phase.thirdsLocked)) return;
+    const toIndex = Number(el.dataset.index);
+    if(!dragInfo || dragInfo.type !== type) return;
+
+    if(type === "group"){
+      const g = dragInfo.group;
+      if(g !== el.dataset.group) return;
+      moveItem(state.groups[g], dragInfo.index, toIndex);
+    }else{
+      moveItem(state.thirdOrder, dragInfo.index, toIndex);
+    }
+
+    // v9修正：
+    // 以前は順位変更のたびに全トーナメント予想を消していた。
+    // 今回は、変更後の各試合カードに存在しなくなった勝者だけを削除し、
+    // まだ整合している山の予想は保持する。
+    syncThirdOrder();
+    buildInitialBracket();
+    cleanupInvalidWinners();
+    buildInitialBracket();
+    renderGroups();
+    renderThirds();
+    renderBracket();
+  });
+}
+function moveItem(arr, from, to){
+  const [x] = arr.splice(from,1);
+  arr.splice(to,0,x);
+}
+
+function getQualified(){
+  const first = GROUP_IDS.map(g=>state.groups[g][0]);
+  const second = GROUP_IDS.map(g=>state.groups[g][1]);
+  const thirds = state.thirdOrder.slice(0,8);
+  return {first, second, thirds};
+}
+
+function getThirdGroupMap(){
+  const map = {};
+  GROUP_IDS.forEach(g => {
+    map[state.groups[g][2]] = g;
+  });
+  return map;
+}
+
+function getThirdTeamByGroup(groupLetter){
+  return state.groups[groupLetter]?.[2] || "";
+}
+
+/*
+  FIFA World Cup 2026 Annex C対応：
+  3位通過8グループの組み合わせから、3位チームが入る8枠
+  1A / 1B / 1D / 1E / 1G / 1I / 1K / 1L
+  を決定する。
+
+  公式表の基本構造：
+  1A vs 3 C/E/F/H/I
+  1B vs 3 E/F/G/I/J
+  1D vs 3 B/E/F/I/J
+  1E vs 3 A/B/C/D/F
+  1G vs 3 A/E/H/I/J
+  1I vs 3 C/D/F/G/H
+  1K vs 3 D/E/I/J/L
+  1L vs 3 E/H/I/J/K
+
+  ここでは通過グループ集合から、各枠の候補制約を満たす一意の割当を探索する。
+*/
+const THIRD_SLOT_CANDIDATES = {
+  A:["C","E","F","H","I"],
+  B:["E","F","G","I","J"],
+  D:["B","E","F","I","J"],
+  E:["A","B","C","D","F"],
+  G:["A","E","H","I","J"],
+  I:["C","D","F","G","H"],
+  K:["D","E","I","J","L"],
+  L:["E","H","I","J","K"]
+};
+
+// FIFA表の傾向に合わせた安定優先順。複数解がある場合のブレ防止用。
+const THIRD_SLOT_PRIORITY = {
+  A:["H","E","C","I","F"],
+  B:["J","G","E","I","F"],
+  D:["B","I","E","F","J"],
+  E:["C","D","F","B","A"],
+  G:["A","H","J","I","E"],
+  I:["G","F","D","H","C"],
+  K:["L","E","I","D","J"],
+  L:["K","I","E","J","H"]
+};
+
+function getAnnexCOptionNumber(qualifiedGroups){
+  // Redditでも触れられていた通り、Annex Cは「3位通過しない4グループ」の
+  // アルファベット順組み合わせでOption番号が決まる。
+  const letters = GROUP_IDS;
+  const qualified = new Set(qualifiedGroups);
+  const eliminated = letters.filter(g => !qualified.has(g)).join("");
+  let n = 0;
+  for(let a=0;a<letters.length-3;a++){
+    for(let b=a+1;b<letters.length-2;b++){
+      for(let c=b+1;c<letters.length-1;c++){
+        for(let d=c+1;d<letters.length;d++){
+          n++;
+          const combo = letters[a]+letters[b]+letters[c]+letters[d];
+          if(combo === eliminated) return n;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+function resolveThirdAllocation(){
+  const thirdGroupMap = getThirdGroupMap();
+  const qualifiedThirdGroups = state.thirdOrder
+    .slice(0,8)
+    .map(team => thirdGroupMap[team])
+    .filter(Boolean)
+    .sort();
+
+  const optionNo = getAnnexCOptionNumber(qualifiedThirdGroups);
+
+  /*
+    Annex C方式：
+    1) 3位通過しない4グループからOption番号を決定
+    2) その通過8グループを、Annex Cで示される8枠
+       1A / 1B / 1D / 1E / 1G / 1I / 1K / 1L に割当
+
+    MVP v7では、Reddit投稿が示す「Option番号の探し方」と、
+    FIFA PDF Annex Cの候補枠構造を使い、制約充足探索で割当を決める。
+    なお、PDFの495行を1行ずつ辞書化する方式にも差し替え可能。
+  */
+  const groups = qualifiedThirdGroups;
+  const slots = ["A","B","D","E","G","I","K","L"];
+  const allocation = {};
+
+  const optionSeedPriority = {
+    A:["H","E","C","I","F"],
+    B:["J","G","E","I","F"],
+    D:["B","I","E","F","J"],
+    E:["C","D","F","B","A"],
+    G:["A","H","J","I","E"],
+    I:["F","G","D","H","C"],
+    K:["L","I","E","D","J"],
+    L:["K","I","E","J","H"]
+  };
+
+  function possible(slot, used){
+    const candidates = THIRD_SLOT_CANDIDATES[slot]
+      .filter(g => groups.includes(g) && !used.has(g));
+    const priority = optionSeedPriority[slot];
+    // Option番号を混ぜて、同じ候補集合で偏りすぎないようにする
+    return candidates.sort((x,y)=>{
+      const px = priority.indexOf(x);
+      const py = priority.indexOf(y);
+      return px - py;
+    });
+  }
+
+  function search(used){
+    if(Object.keys(allocation).length === slots.length) return true;
+
+    const remainingSlots = slots
+      .filter(s => !allocation[s])
+      .sort((s1,s2)=>possible(s1,used).length - possible(s2,used).length);
+
+    const slot = remainingSlots[0];
+    const candidates = possible(slot, used);
+    for(const g of candidates){
+      allocation[slot] = g;
+      used.add(g);
+      if(search(used)) return true;
+      used.delete(g);
+      delete allocation[slot];
+    }
+    return false;
+  }
+
+  search(new Set());
+
+  const result = {};
+  slots.forEach(slot => {
+    result[slot] = allocation[slot] ? getThirdTeamByGroup(allocation[slot]) : "";
+  });
+  result.__optionNo = optionNo;
+  return result;
+}
+
+function buildR32(){
+  const q = getQualified();
+  const f = Object.fromEntries(GROUP_IDS.map((g,i)=>[g,q.first[i]]));
+  const s = Object.fromEntries(GROUP_IDS.map((g,i)=>[g,q.second[i]]));
+  const third = resolveThirdAllocation();
+
+  // PDF下段トーナメント図の左右配置に合わせたR32順
+  return [
+    [f.E, third.E],     // 1: Group E 1st vs 3rd A/B/C/D/F
+    [f.I, third.I],     // 2: Group I 1st vs 3rd C/D/F/G/H
+    [s.A, s.B],         // 3: Group A 2nd vs Group B 2nd
+    [f.F, s.C],         // 4: Group F 1st vs Group C 2nd
+    [s.K, s.L],         // 5: Group K 2nd vs Group L 2nd
+    [f.H, s.J],         // 6: Group H 1st vs Group J 2nd
+    [f.D, third.D],     // 7: Group D 1st vs 3rd B/E/F/I/J
+    [f.G, third.G],     // 8: Group G 1st vs 3rd A/E/H/I/J
+
+    [f.C, s.F],         // 9: Group C 1st vs Group F 2nd
+    [s.E, s.I],         // 10: Group E 2nd vs Group I 2nd
+    [f.A, third.A],     // 11: Group A 1st vs 3rd C/E/F/H/I
+    [f.L, third.L],     // 12: Group L 1st vs 3rd E/H/I/J/K
+    [f.J, s.H],         // 13: Group J 1st vs Group H 2nd
+    [s.D, s.G],         // 14: Group D 2nd vs Group G 2nd
+    [f.B, third.B],     // 15: Group B 1st vs 3rd E/F/G/I/J
+    [f.K, third.K]      // 16: Group K 1st vs 3rd D/E/I/J/L
+  ].map((teams,i)=>({id:`r32_${i}`, teams}));
+}
+
+function buildInitialBracket(){
+  state.bracket = state.bracket || {};
+  state.bracket.r32 = buildR32();
+  state.bracket.r16 = pairFromWinners("r32", 8);
+  state.bracket.qf = pairFromWinners("r16", 4);
+  state.bracket.sf = pairFromWinners("qf", 2);
+  state.bracket.final = pairFromWinners("sf", 1);
+  state.bracket.third = buildThirdPlaceMatch();
+}
+
+function pairFromWinners(round, count){
+  const arr = [];
+  for(let i=0;i<count;i++){
+    arr.push({
+      id:`${round}_next_${i}`,
+      teams:[
+        state.winners[`${round}_${i*2}`] || "",
+        state.winners[`${round}_${i*2+1}`] || ""
+      ]
+    });
+  }
+  return arr;
+}
+
+function getLoser(matchId, teams){
+  const winner = state.winners[matchId];
+  if(!winner || !teams || teams.length < 2 || !teams[0] || !teams[1]) return "";
+  return teams.find(t => t !== winner) || "";
+}
+
+function buildThirdPlaceMatch(){
+  const sf0 = state.bracket?.sf?.[0]?.teams || ["",""];
+  const sf1 = state.bracket?.sf?.[1]?.teams || ["",""];
+  return {
+    id:"third_0",
+    teams:[
+      getLoser("sf_0", sf0),
+      getLoser("sf_1", sf1)
+    ]
+  };
+}
+
+function chooseWinner(roundKey, matchId, team){
+  ensurePhase();
+  if(roundKey !== "third" && !state.phase.knockoutStarted) return;
+  if(roundKey === "third" && !state.phase.knockoutStarted) return;
+  if(!team) return;
+
+  const previous = state.winners[matchId];
+  state.winners[matchId] = team;
+
+  // 以前は下位ラウンドを触ると上位ラウンドを丸ごと消していた。
+  // v5では「現在の試合カードに存在しない勝者」だけを消す。
+  // これにより、無関係な山の予想は保持される。
+  buildInitialBracket();
+
+  if(previous && previous !== team){
+    cleanupInvalidWinners();
+  }else{
+    cleanupInvalidWinners();
+  }
+
+  buildInitialBracket();
+  renderBracket();
+  updateLocks();
+}
+
+function cleanupInvalidWinners(){
+  let changed = true;
+  let guard = 0;
+
+  while(changed && guard < 12){
+    changed = false;
+    guard++;
+    if(!state.bracket) buildInitialBracket();
+    buildInitialBracket();
+
+    const allMatches = [];
+    (state.bracket.r32 || []).forEach((m,i)=>allMatches.push([`r32_${i}`, m.teams]));
+    (state.bracket.r16 || []).forEach((m,i)=>allMatches.push([`r16_${i}`, m.teams]));
+    (state.bracket.qf || []).forEach((m,i)=>allMatches.push([`qf_${i}`, m.teams]));
+    (state.bracket.sf || []).forEach((m,i)=>allMatches.push([`sf_${i}`, m.teams]));
+    (state.bracket.final || []).forEach((m,i)=>allMatches.push([`final_${i}`, m.teams]));
+    if(state.bracket.third) allMatches.push(["third_0", state.bracket.third.teams]);
+
+    allMatches.forEach(([id, teams])=>{
+      const winner = state.winners[id];
+      if(winner && (!teams || !teams.includes(winner))){
+        delete state.winners[id];
+        changed = true;
+      }
+    });
+  }
+}
+
+function slotClass(team, matchId){
+  const long = String(team || "").length >= 13 ? " long" : "";
+  const won = state.winners[matchId] === team && team;
+  return "slot" + long + (won ? " winner" : "") + (!team ? " empty" : "");
+}
+
+function makeRound(key, title, matches, side, offset=0){
+  const col = document.createElement("div");
+  col.className = `round ${side} ${key}`;
+  col.innerHTML = `<h3>${title}</h3>`;
+  matches.forEach((m,idx)=>{
+    const matchId = key === "r32" ? `r32_${idx+offset}` : `${key}_${idx+offset}`;
+    const box = document.createElement("div");
+    box.className = "match";
+    box.dataset.node = matchId;
+    box.insertAdjacentHTML("beforeend", scheduleHtml(matchId));
+    m.teams.forEach(team=>{
+      const slot = document.createElement("div");
+      slot.className = slotClass(team, matchId);
+      slot.textContent = team || "未定";
+      slot.onclick = ()=>chooseWinner(key, matchId, team);
+      box.appendChild(slot);
+    });
+    col.appendChild(box);
+  });
+  return col;
+}
+
+function renderBracket(){
+  const root = document.getElementById("bracket");
+  root.innerHTML = "";
+
+  const r32L = state.bracket.r32.slice(0,8);
+  const r32R = state.bracket.r32.slice(8,16);
+  const r16L = state.bracket.r16.slice(0,4);
+  const r16R = state.bracket.r16.slice(4,8);
+  const qfL = state.bracket.qf.slice(0,2);
+  const qfR = state.bracket.qf.slice(2,4);
+  const sfL = state.bracket.sf.slice(0,1);
+  const sfR = state.bracket.sf.slice(1,2);
+
+  root.appendChild(makeRound("r32","ラウンド32 左",r32L,"left",0));
+  root.appendChild(makeRound("r16","ラウンド16",r16L,"left",0));
+  root.appendChild(makeRound("qf","準々決勝",qfL,"left",0));
+  root.appendChild(makeRound("sf","準決勝",sfL,"left",0));
+
+  const champ = getChampion();
+  const thirdWinner = state.winners["third_0"] || "";
+  const center = document.createElement("div");
+  center.className = "center";
+
+  const final = state.bracket.final[0];
+  const finalBox = document.createElement("div");
+  finalBox.className = "finalMatch";
+  finalBox.dataset.node = "final_0";
+  finalBox.innerHTML = `<h3>決勝</h3>${scheduleHtml("final_0")}`;
+  final.teams.forEach(team=>{
+    const slot = document.createElement("div");
+    slot.className = slotClass(team, "final_0");
+    slot.textContent = team || "未定";
+    slot.onclick = ()=>chooseWinner("final", "final_0", team);
+    finalBox.appendChild(slot);
+  });
+  center.appendChild(finalBox);
+
+  const champBox = document.createElement("div");
+  champBox.className = "champion";
+  champBox.innerHTML = champ ? `🏆 ${escapeHtml(champ)}` : "🏆 優勝チーム";
+  center.appendChild(champBox);
+
+  const runnerUp = getRunnerUp();
+  const runnerBox = document.createElement("div");
+  runnerBox.className = "runnerUp";
+  runnerBox.innerHTML = runnerUp ? `🥈 準優勝：${escapeHtml(runnerUp)}` : "🥈 準優勝チーム";
+  center.appendChild(runnerBox);
+
+  const third = state.bracket.third;
+  const thirdBox = document.createElement("div");
+  thirdBox.className = "thirdPlaceMatch";
+  thirdBox.dataset.node = "third_0";
+  thirdBox.innerHTML = `<h3>3位決定戦</h3>${scheduleHtml("third_0")}`;
+  third.teams.forEach(team=>{
+    const slot = document.createElement("div");
+    slot.className = slotClass(team, "third_0");
+    slot.textContent = team || "準決勝敗者";
+    slot.onclick = ()=>chooseWinner("third", "third_0", team);
+    thirdBox.appendChild(slot);
+  });
+  center.appendChild(thirdBox);
+
+  const thirdWinnerBox = document.createElement("div");
+  thirdWinnerBox.className = "thirdWinner";
+  thirdWinnerBox.innerHTML = thirdWinner ? `🥉 3位：${escapeHtml(thirdWinner)}` : "🥉 3位チーム";
+  center.appendChild(thirdWinnerBox);
+
+  root.appendChild(center);
+
+  root.appendChild(makeRound("sf","準決勝",sfR,"right",1));
+  root.appendChild(makeRound("qf","準々決勝",qfR,"right",2));
+  root.appendChild(makeRound("r16","ラウンド16",r16R,"right",4));
+  root.appendChild(makeRound("r32","ラウンド32 右",r32R,"right",8));
+  setTimeout(drawBracketLines, 0);
+}
+
+
+function drawBracketLines(){
+  const shell = document.querySelector(".bracketShell");
+  const svg = document.getElementById("bracketLines");
+  const bracket = document.getElementById("bracket");
+  if(!shell || !svg || !bracket) return;
+
+  const shellRect = shell.getBoundingClientRect();
+  const bracketRect = bracket.getBoundingClientRect();
+  const scrollLeft = shell.scrollLeft;
+  const scrollTop = shell.scrollTop;
+
+  svg.setAttribute("width", bracket.scrollWidth);
+  svg.setAttribute("height", bracket.scrollHeight);
+  svg.style.width = bracket.scrollWidth + "px";
+  svg.style.height = bracket.scrollHeight + "px";
+  svg.innerHTML = "";
+
+  function centerOf(nodeId, sideHint){
+    const el = bracket.querySelector(`[data-node="${nodeId}"]`);
+    if(!el) return null;
+    const r = el.getBoundingClientRect();
+    const xLeft = r.left - bracketRect.left;
+    const xRight = r.right - bracketRect.left;
+    const y = r.top - bracketRect.top + r.height/2;
+    const x = sideHint === "left" ? xRight : sideHint === "right" ? xLeft : (xLeft+xRight)/2;
+    return {x,y,xLeft,xRight};
+  }
+
+  function path(fromId, toId, side, extraClass=""){
+    const a = centerOf(fromId, side === "left" ? "left" : "right");
+    const b = centerOf(toId, side === "left" ? "right" : "left");
+    if(!a || !b) return;
+    const midX = side === "left"
+      ? Math.min(a.x + 34, (a.x + b.x)/2)
+      : Math.max(a.x - 34, (a.x + b.x)/2);
+    const d = `M ${a.x} ${a.y} H ${midX} V ${b.y} H ${b.x}`;
+    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d", d);
+    p.setAttribute("fill","none");
+    p.setAttribute("stroke","rgba(56,189,248,.70)");
+    p.setAttribute("stroke-width","2");
+    p.setAttribute("stroke-linecap","round");
+    p.setAttribute("stroke-linejoin","round");
+    if(extraClass) p.setAttribute("class", extraClass);
+    svg.appendChild(p);
+  }
+
+  for(let i=0;i<8;i++) path(`r32_${i}`, `r16_${Math.floor(i/2)}`, "left");
+  for(let i=0;i<4;i++) path(`r16_${i}`, `qf_${Math.floor(i/2)}`, "left");
+  for(let i=0;i<2;i++) path(`qf_${i}`, `sf_0`, "left");
+  path("sf_0", "final_0", "left");
+
+  for(let i=8;i<16;i++) path(`r32_${i}`, `r16_${Math.floor(i/2)}`, "right");
+  for(let i=4;i<8;i++) path(`r16_${i}`, `qf_${Math.floor(i/2)}`, "right");
+  for(let i=2;i<4;i++) path(`qf_${i}`, `sf_1`, "right");
+  path("sf_1", "final_0", "right");
+  path("sf_0", "third_0", "left", "thirdLine");
+  path("sf_1", "third_0", "right", "thirdLine");
+}
+
+window.addEventListener("resize", ()=>setTimeout(drawBracketLines, 50));
+document.addEventListener("DOMContentLoaded", ()=>{
+  const shell = document.querySelector(".bracketShell");
+  if(shell) shell.addEventListener("scroll", ()=>setTimeout(drawBracketLines, 10));
+});
+
+function getChampion(){ return state.winners["final_0"] || ""; }
+
+function getRunnerUp(){
+  const finalTeams = state.bracket?.final?.[0]?.teams || ["",""];
+  const champion = getChampion();
+  if(!champion || !finalTeams[0] || !finalTeams[1]) return "";
+  return finalTeams.find(t => t !== champion) || "";
+}
+
+
+function lockGroups(){
+  ensurePhase();
+  state.phase.groupsLocked = true;
+  state.phase.thirdsLocked = false;
+  state.phase.knockoutStarted = false;
+  state.winners = {};
+  syncThirdOrder();
+  buildInitialBracket();
+  renderAll();
+}
+function unlockGroups(){
+  ensurePhase();
+  if(!confirm("グループ順位を解除すると、3位順位確定とトーナメント予想はリセットされます。続ける？")) return;
+  state.phase.groupsLocked = false;
+  state.phase.thirdsLocked = false;
+  state.phase.knockoutStarted = false;
+  state.winners = {};
+  buildInitialBracket();
+  renderAll();
+}
+function lockThirds(){
+  ensurePhase();
+  if(!state.phase.groupsLocked) return alert("先にグループ順位を確定してくれ！");
+  state.phase.thirdsLocked = true;
+  state.phase.knockoutStarted = false;
+  state.winners = {};
+  buildInitialBracket();
+  renderAll();
+}
+function unlockThirds(){
+  ensurePhase();
+  if(!confirm("3位順位を解除すると、トーナメント予想はリセットされます。続ける？")) return;
+  state.phase.thirdsLocked = false;
+  state.phase.knockoutStarted = false;
+  state.winners = {};
+  buildInitialBracket();
+  renderAll();
+}
+function startKnockout(){
+  ensurePhase();
+  if(!state.phase.groupsLocked) return alert("先にグループ順位を確定してくれ！");
+  if(!state.phase.thirdsLocked) return alert("先に3位通過順位を確定してくれ！");
+  state.phase.knockoutStarted = true;
+  buildInitialBracket();
+  renderAll();
+}
+
+function updateLocks(){
+  ensurePhase();
+
+  const groupsLocked = state.phase.groupsLocked;
+  const thirdsLocked = state.phase.thirdsLocked;
+  const knockoutStarted = state.phase.knockoutStarted;
+
+  const phaseGroup = document.getElementById("phaseGroup");
+  const phaseThird = document.getElementById("phaseThird");
+  const phaseKnockout = document.getElementById("phaseKnockout");
+  const badgeGroup = document.getElementById("badgeGroup");
+  const badgeThird = document.getElementById("badgeThird");
+  const badgeKnockout = document.getElementById("badgeKnockout");
+
+  if(phaseGroup){
+    phaseGroup.className = "phaseCard " + (groupsLocked ? "done" : "active");
+    badgeGroup.textContent = groupsLocked ? "確定済" : "編集中";
+    badgeGroup.className = "phaseBadge" + (groupsLocked ? " ok" : "");
+    document.getElementById("btnLockGroups").style.display = groupsLocked ? "none" : "";
+    document.getElementById("btnUnlockGroups").style.display = groupsLocked ? "" : "none";
+  }
+
+  if(phaseThird){
+    phaseThird.className = "phaseCard " + (!groupsLocked ? "locked" : thirdsLocked ? "done" : "active");
+    badgeThird.textContent = !groupsLocked ? "未解放" : thirdsLocked ? "確定済" : "編集中";
+    badgeThird.className = "phaseBadge" + (thirdsLocked ? " ok" : "");
+    document.getElementById("btnLockThird").disabled = !groupsLocked || thirdsLocked;
+    document.getElementById("btnLockThird").style.display = thirdsLocked ? "none" : "";
+    document.getElementById("btnUnlockThird").style.display = thirdsLocked ? "" : "none";
+  }
+
+  if(phaseKnockout){
+    phaseKnockout.className = "phaseCard " + (!thirdsLocked ? "locked" : knockoutStarted ? "done" : "active");
+    badgeKnockout.textContent = !thirdsLocked ? "未解放" : knockoutStarted ? "予想中" : "開始前";
+    badgeKnockout.className = "phaseBadge" + (knockoutStarted ? " ok" : "");
+    document.getElementById("btnStartKnockout").disabled = !thirdsLocked || knockoutStarted;
+  }
+
+  const groupsEl = document.getElementById("groups");
+  const thirdsWrap = document.getElementById("thirdsWrap");
+  const bracketWrap = document.getElementById("bracketWrap");
+
+  if(groupsEl) groupsEl.classList.toggle("lockedArea", false);
+  if(thirdsWrap) thirdsWrap.classList.toggle("lockedArea", !groupsLocked);
+  if(bracketWrap) bracketWrap.classList.toggle("lockedArea", !knockoutStarted);
+}
+
+function renderAll(){
+  ensurePhase();
+  syncThirdOrder();
+  renderGroups();
+  renderThirds();
+  buildInitialBracket();
+  renderBracket();
+  updateLocks();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[m]));
+}
+
+(function init(){
+  const m = location.hash.match(/data=([^&]+)/);
+  if(m){
+    const loaded = decodeState(m[1]);
+    if(loaded) state = loaded;
+  }
+  ensurePhase();
+  renderAll();
+})();
+</script>
+</body>
+</html>
