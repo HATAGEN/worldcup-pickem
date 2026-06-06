@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>2026 FIFA World Cup Pick'em Mobile v12</title>
+  <title>2026 FIFA World Cup Pick'em Mobile v13</title>
   <style>
     :root{
       --bg:#08111f; --card:#101b2e; --card2:#13233d; --text:#eef5ff;
@@ -549,6 +549,83 @@
       .bracket{min-width:1290px;}
     }
 
+  
+    .mobileBracket{
+      display:none;
+    }
+    .mobileRound{
+      background:rgba(16,27,46,.92);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      margin:12px 0;
+    }
+    .mobileRound h3{
+      margin:0 0 10px;
+      font-size:15px;
+      color:#e2e8f0;
+      text-align:center;
+      background:#111827;
+      border:1px solid #334155;
+      border-radius:10px;
+      padding:7px;
+    }
+    .mobileMatch{
+      background:rgba(19,35,61,.88);
+      border:1px solid rgba(39,64,95,.85);
+      border-radius:13px;
+      padding:8px;
+      margin:9px 0;
+    }
+    .mobileMatch .matchMeta{
+      margin-bottom:6px;
+    }
+    .mobileFinalBlock{
+      background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(56,189,248,.10));
+      border-color:rgba(251,191,36,.65);
+    }
+
+    @media (max-width: 760px){
+      .layout{
+        display:block !important;
+      }
+      aside, section{
+        width:100% !important;
+        max-width:100% !important;
+      }
+      .bracketShell{
+        overflow:visible !important;
+        min-height:auto !important;
+        padding:10px !important;
+      }
+      #bracket,
+      #bracketLines{
+        display:none !important;
+      }
+      .mobileBracket{
+        display:block !important;
+        width:100%;
+      }
+      .slot{
+        white-space:normal !important;
+        overflow-wrap:anywhere !important;
+        word-break:normal !important;
+        font-size:14px !important;
+      }
+      .slot.long{
+        font-size:13px !important;
+      }
+      .champion,
+      .runnerUp,
+      .thirdWinner{
+        font-size:15px !important;
+        padding:13px 10px !important;
+      }
+      .bracketTitle{
+        margin-bottom:8px !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -622,7 +699,7 @@
     <section>
       <div id="bracketWrap" class="bracketShell">
         <div class="bracketTitle">🏆 決勝トーナメント表</div>
-        <svg id="bracketLines" class="bracketSvg"></svg><div id="bracket" class="bracket"></div>
+        <svg id="bracketLines" class="bracketSvg"></svg><div id="bracket" class="bracket"></div><div id="mobileBracket" class="mobileBracket"></div>
       </div>
     </section>
   </div>
@@ -724,11 +801,11 @@ function decodeState(s){
   }catch(e){ return null; }
 }
 function saveLocal(){
-  localStorage.setItem("wc_pickem_mobile_v12", JSON.stringify(state));
+  localStorage.setItem("wc_pickem_mobile_v13", JSON.stringify(state));
   alert("保存した！");
 }
 function loadLocal(){
-  const raw = localStorage.getItem("wc_pickem_mobile_v12");
+  const raw = localStorage.getItem("wc_pickem_mobile_v13");
   if(!raw) return alert("保存データがないぞ。");
   state = JSON.parse(raw);
   ensurePhase();
@@ -1215,6 +1292,79 @@ function makeRound(key, title, matches, side, offset=0){
   return col;
 }
 
+
+function makeMobileMatch(roundKey, matchId, match, titleExtra=""){
+  const box = document.createElement("div");
+  box.className = "mobileMatch";
+  if(roundKey === "final" || roundKey === "third") box.classList.add("mobileFinalBlock");
+  box.insertAdjacentHTML("beforeend", scheduleHtml(matchId));
+  match.teams.forEach(team=>{
+    const slot = document.createElement("div");
+    slot.className = slotClass(team, matchId);
+    slot.textContent = team || (roundKey === "third" ? "準決勝敗者" : "未定");
+    slot.onclick = ()=>chooseWinner(roundKey, matchId, team);
+    box.appendChild(slot);
+  });
+  return box;
+}
+
+function renderMobileBracket(){
+  const root = document.getElementById("mobileBracket");
+  if(!root) return;
+  root.innerHTML = "";
+
+  const rounds = [
+    ["r32","ラウンド32",state.bracket.r32],
+    ["r16","ラウンド16",state.bracket.r16],
+    ["qf","準々決勝",state.bracket.qf],
+    ["sf","準決勝",state.bracket.sf],
+  ];
+
+  rounds.forEach(([key,title,matches])=>{
+    const sec = document.createElement("div");
+    sec.className = "mobileRound";
+    sec.innerHTML = `<h3>${title}</h3>`;
+    matches.forEach((m,idx)=>{
+      const matchId = `${key}_${idx}`;
+      sec.appendChild(makeMobileMatch(key, matchId, m));
+    });
+    root.appendChild(sec);
+  });
+
+  const finalSec = document.createElement("div");
+  finalSec.className = "mobileRound";
+  finalSec.innerHTML = `<h3>決勝・表彰</h3>`;
+  finalSec.appendChild(makeMobileMatch("final", "final_0", state.bracket.final[0]));
+
+  const champ = getChampion();
+  const champBox = document.createElement("div");
+  champBox.className = "champion";
+  champBox.innerHTML = champ ? `🏆 ${escapeHtml(champ)}` : "🏆 優勝チーム";
+  finalSec.appendChild(champBox);
+
+  const runnerUp = getRunnerUp();
+  const runnerBox = document.createElement("div");
+  runnerBox.className = "runnerUp";
+  runnerBox.innerHTML = runnerUp ? `🥈 準優勝：${escapeHtml(runnerUp)}` : "🥈 準優勝チーム";
+  finalSec.appendChild(runnerBox);
+
+  root.appendChild(finalSec);
+
+  const thirdSec = document.createElement("div");
+  thirdSec.className = "mobileRound";
+  thirdSec.innerHTML = `<h3>3位決定戦</h3>`;
+  thirdSec.appendChild(makeMobileMatch("third", "third_0", state.bracket.third));
+
+  const thirdWinner = state.winners["third_0"] || "";
+  const thirdWinnerBox = document.createElement("div");
+  thirdWinnerBox.className = "thirdWinner";
+  thirdWinnerBox.innerHTML = thirdWinner ? `🥉 3位：${escapeHtml(thirdWinner)}` : "🥉 3位チーム";
+  thirdSec.appendChild(thirdWinnerBox);
+
+  root.appendChild(thirdSec);
+}
+
+
 function renderBracket(){
   const root = document.getElementById("bracket");
   root.innerHTML = "";
@@ -1288,6 +1438,7 @@ function renderBracket(){
   root.appendChild(makeRound("qf","準々決勝",qfR,"right",2));
   root.appendChild(makeRound("r16","ラウンド16",r16R,"right",4));
   root.appendChild(makeRound("r32","ラウンド32 右",r32R,"right",8));
+  renderMobileBracket();
   setTimeout(drawBracketLines, 0);
 }
 
